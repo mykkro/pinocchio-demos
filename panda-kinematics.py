@@ -4,6 +4,7 @@ import sys
 import os
 from os.path import dirname, join, abspath
 from numpy.linalg import norm, solve
+import pandas as pd
 
 
 if __name__ == "__main__":
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 
     #  coordinate transformations in the 3D Euclidean space (aka SE3)
     #  params: R (Rotation), p
-    desired_pose = pin.SE3(np.eye(3), np.array([0.8, 0.3, 1.]))
+    desired_pose = pin.SE3(np.array([[1,0,0], [0,1,0], [0,0,1]]), np.array([1.2, 0.0, 0.5]))
 
     # What exactly is SE(3) and SO(3)?
     # See also: https://natanaso.github.io/ece276a2020/ref/ECE276A_12_SO3_SE3.pdf
@@ -64,6 +65,7 @@ if __name__ == "__main__":
 
     # BEGIN iteration
     i = 0
+    outq = []
     while True:
         # placement of the EE joint
         plac = data.oMi[EE_JOINT_ID]
@@ -85,6 +87,8 @@ if __name__ == "__main__":
         v = - J.T.dot(solve(J.dot(J.T) + damp * np.eye(6), err))  # damped pseudoinverse v = -Jt(J*Jt + lambdaI)-1*e
         q = pin.integrate(model, q, v*DT)  # add the obtained tangent vector to the current configuration
 
+        outq.append(q.tolist())
+
         print(f"Iteration {i}", q)
         i += 1
 
@@ -95,3 +99,11 @@ if __name__ == "__main__":
 
     print("Result:", q.flatten().tolist())
     print("Error:", err.T)
+
+    output_table_path = "target/table.csv"
+    with open(output_table_path, "w", encoding="utf-8") as outfile:
+        txt = "\t".join([f"q{i}" for i in range(16)])
+        outfile.write(txt + "\n")
+        for q in outq:
+            txt = "\t".join([str(it) for it in q])
+            outfile.write(txt + "\n")

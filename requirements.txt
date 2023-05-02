@@ -1,3 +1,6 @@
 meshcat[ffmpeg]
 Pillow
+numpy
+pandas
+pyyaml
 
