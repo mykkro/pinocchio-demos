@@ -78,9 +78,9 @@ q1 = np.array(
 v0 = np.random.randn(model.nv) * 2
 data = viz.data
 pin.forwardKinematics(model, data, q1, v0)
-frame_id = model.getFrameId("HR_FOOT")
+frame_id = model.getFrameId("panda_link7")
 viz.display()
-viz.drawFrameVelocities(frame_id=frame_id)
+### viz.drawFrameVelocities(frame_id=frame_id)
 
 model.gravity.linear[:] = 0.0
 dt = 0.01
@@ -110,9 +110,10 @@ fid2 = model.getFrameId("FL_FOOT")
 
 
 def my_callback(i, *args):
-    viz.drawFrameVelocities(frame_id)
-    viz.drawFrameVelocities(fid2)
+    ## viz.drawFrameVelocities(frame_id)
+    ## viz.drawFrameVelocities(fid2)
+    pass
 
 
-with viz.create_video_ctx("../leap.mp4"):
+with viz.create_video_ctx("target/record.mp4"):
     viz.play(qs, dt, callback=my_callback)
