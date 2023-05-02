@@ -41,7 +41,14 @@ if __name__ == "__main__":
     #  params: R (Rotation), p
     desired_pose = pin.SE3(np.eye(3), np.array([0.8, 0.3, 1.]))
 
+    # What exactly is SE(3) and SO(3)?
+    # See also: https://natanaso.github.io/ece276a2020/ref/ECE276A_12_SO3_SE3.pdf
+    # SO(3) - [for describing orientation] Special Orthogonal Group SO(3) : set of 3x3 matrices R: det(R)=1, Rt*R = I (hence Rt = R-1)
+    # SE(3) - [for describing pose] Special Euclidean Group SE(3) : T = set of 4x4 matrices: [[R p] [0 1]], R is in SO(3), P is 3-vector
+    # SO(3), SE(3) are matrix Lie groups
+
     # initial configuration
+    # default (neutral) config
     q = pin.neutral(model)
 
     print("Desired pose:", desired_pose)
@@ -65,8 +72,8 @@ if __name__ == "__main__":
         # Update the joint placements according to the current joint configuration
         pin.forwardKinematics(model, data, q)
         plac = data.oMi[EE_JOINT_ID]
-        dMi = desired_pose.actInv(plac)
-        err = pin.log(dMi).vector
+        dMi = desired_pose.actInv(plac)  # transformation between the desired pose and the current one
+        err = pin.log(dMi).vector # an error - compute error in SO(3) as a six-dim vector
         if norm(err) < eps:
             success = True
             break
@@ -75,8 +82,8 @@ if __name__ == "__main__":
             break
 
         J = pin.computeJointJacobian(model, data, q, EE_JOINT_ID)
-        v = - J.T.dot(solve(J.dot(J.T) + damp * np.eye(6), err))
-        q = pin.integrate(model, q, v*DT)
+        v = - J.T.dot(solve(J.dot(J.T) + damp * np.eye(6), err))  # damped pseudoinverse v = -Jt(J*Jt + lambdaI)-1*e
+        q = pin.integrate(model, q, v*DT)  # add the obtained tangent vector to the current configuration
 
         print(f"Iteration {i}", q)
         i += 1
